@@ -16,6 +16,7 @@ using json = nlohmann::json;
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
+#define MPC_MAX_INTERATIONS (50) 
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -92,14 +93,26 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          Eigen::Map<Eigen::VectorXd> ptsx_EVec(ptsx.data(), ptsx.size());
+          Eigen::Map<Eigen::VectorXd> ptsy_EVec(ptsy.data(), ptsy.size());
+          auto coeffs = polyfit(ptsx_EVec, ptsy_EVec, 1);
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+          const double cte = polyeval(coeffs, px) - py;
+          // Due to the sign starting at 0, the orientation error is -f'(x).
+          // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
+          const double epsi = psi - atan(coeffs[1]);
+
+          Eigen::VectorXd state(6);
+          state << px, py, psi, v, cte, epsi;
+          auto vars = mpc.Solve(state, coeffs);
+
+          const double steer_value = vars[6]/deg2rad(25);
+          const double throttle_value = vars[7];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
