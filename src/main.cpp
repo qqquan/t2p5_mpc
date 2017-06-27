@@ -150,7 +150,7 @@ int main() {
           vector<double> next_y_vals;
 
           //project 10 points along the detected waypoints
-          const int trajectory_n = 10; //mpc_solution.predicted_x.size()>10? 10:mpc_solution.predicted_x.size();// maximumly 10 steps for line projection
+          const int trajectory_n = 30; //mpc_solution.predicted_x.size()>10? 10:mpc_solution.predicted_x.size();// maximumly 10 steps for line projection
 
           for (int x = 1; x < trajectory_n+1; ++x)
           {
