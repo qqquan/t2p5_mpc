@@ -3,6 +3,8 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+![project_preview](https://github.com/qqquan/t2p5_mpc/raw/master/mpc_simulation.gif)
+
 ## Dependencies
 
 * cmake >= 3.5
