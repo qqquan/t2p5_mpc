@@ -3,9 +3,63 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+## Overview
+
+This project implements a Model Predictive Controller to drive a simulated vehicle along the track. The controller receives the waypoints the lane cencter line and sends the driving command of steering angle and acceleration to the simulator. The below video shows the result of the car driven in the lane. The yellow line visualizes the sensor feedback on the lane and the green line is the controller forecast of driving trajectory.
+
 ![project_preview](https://github.com/qqquan/t2p5_mpc/raw/master/mpc_simulation.gif)
 
-## Dependencies
+## Design
+
+### The Model
+
+A Bicycle model is used with an assupmtion of zero yaw rate, which means that the steering makes an instant change on the car. The formula is as following:
+
+```
+      x[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+      y[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+      psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+      v[t+1] = v[t] + a[t] * dt
+      cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+      epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+```
+
+`x`: vehicle state of x-axis position in meters
+`y`: vehicle state of y-axis position in meters
+`v`: vehicle state of speed in meter/second
+`psi`: vehicle state of orientation in radians
+`delta`: acturation command of steering angle in radians
+`a`: acturation command of acceleration in m^2/s
+`f()`: polyfit based on the lane waypoints
+`cte`: cross track error
+`epsi`: orientation error
+`psides`: road curvature angle that the car must turns for.
+`Lf`: the distance between the front of the vehicle and its center of gravity
+
+The model is fed as constraints into the `ipopt` optimization library.
+
+### Timestep Length and Elapsed Duration (N & dt)
+
+After manually tuning the hyperparameters, the timestep length N of 25 and the elapsed duration of 0.02 is chosen for a reference speed of 50 m/s. 
+
+This means the total MPC prediction time is 25*0.02=0.5 seconds. 
+
+The prediction time needs to be longer than the actuation interval. Too long a prediction time, the MPC is easily affected by the higher order term of the polyfit lane and the resulted trajectory is not smooth. Too short a prediction time, the MPC would not prepare for a incoming curve.
+
+
+### Polynomial Fitting and MPC Preprocessing
+
+The simulator feedbacks the lane centerline waypoints. The waypoints are in the global map coordinate. MPC preprocess the data by transforming them to a local reference frame, where the car orientation is the x-axis and the perpendicular line to x-axis is the y-axis.
+
+
+This preprocessed data is further fited as a 3rd degree polhynomial to model the lane.
+
+### Model Predictive Control with Latency
+
+The simulation has a 100ms latency before actuation. MPC controller accomendates the issue by incorperating the letancy into prediction. In other words, MPC controller returns an acuation prediction at the time of the timestep dt plus lantency after the current timestep.
+
+
+## Installation
 
 * cmake >= 3.5
  * All OSes: [click here for installation instructions](https://cmake.org/install/)
@@ -52,66 +106,3 @@ Self-Driving Car Engineer Nanodegree Program
 3. Compile: `cmake .. && make`
 4. Run it: `./mpc`.
 
-## Tips
-
-1. It's recommended to test the MPC on basic examples to see if your implementation behaves as desired. One possible example
-is the vehicle starting offset of a straight line (reference). If the MPC implementation is correct, after some number of timesteps
-(not too many) it should find and track the reference line.
-2. The `lake_track_waypoints.csv` file has the waypoints of the lake track. You could use this to fit polynomials and points and see of how well your model tracks curve. NOTE: This file might be not completely in sync with the simulator so your solution should NOT depend on it.
-3. For visualization this C++ [matplotlib wrapper](https://github.com/lava/matplotlib-cpp) could be helpful.
-
-## Editor Settings
-
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/b1ff3be0-c904-438e-aad3-2b5379f0e0c3/concepts/1a2255a0-e23c-44cf-8d41-39b8a3c8264a)
-for instructions and the project rubric.
-
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
