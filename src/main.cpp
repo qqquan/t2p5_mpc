@@ -96,7 +96,7 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];  //mph
-          // v *= 0.44704; //convert from mph to m/s. reference: https://github.com/udacity/CarND-MPC-Project/blob/master/DATA.md
+          // v *= 0.44704; //The simulator might actually use m/s rather than mph. convert from mph to m/s. reference: https://github.com/udacity/CarND-MPC-Project/blob/master/DATA.md
 
           // Eigen::Map<Eigen::VectorXd> ptsx_EVec(ptsx.data(), ptsx.size());
           // Eigen::Map<Eigen::VectorXd> ptsy_EVec(ptsy.data(), ptsy.size());
@@ -105,6 +105,8 @@ int main() {
           Eigen::VectorXd local_waypoint_x(ptsx.size());
           Eigen::VectorXd local_waypoint_y(ptsx.size());
 
+                    int DBG_waypoint_distance = 0;
+
           for (unsigned int i = 0; i < ptsx.size(); ++i)
           {
             const double x_dist = ptsx[i] - px;
@@ -112,7 +114,11 @@ int main() {
 
             local_waypoint_x[i] = x_dist*cos(psi) + y_dist*sin(psi);
             local_waypoint_y[i] = -x_dist*sin(psi) + y_dist*cos(psi);
+
+                        DBG_waypoint_distance += sqrt(x_dist*x_dist + y_dist*y_dist);
+
           }
+          std::cout<< "waypoint detection length: " << DBG_waypoint_distance<< std::endl;
 
 
 
