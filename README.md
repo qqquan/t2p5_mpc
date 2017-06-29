@@ -25,15 +25,25 @@ A Bicycle model is used with an assupmtion of zero yaw rate, which means that th
 ```
 
 `x`: vehicle state of x-axis position in meters.
+
 `y`: vehicle state of y-axis position in meters.
+
 `v`: vehicle state of speed in meter/second.
+
 `psi`: vehicle state of orientation in radians.
+
 `delta`: actuation command of steering angle in radians.
+
 `a`: actuation command of acceleration in m^2/s.
+
 `f()`: polyfit based on the lane waypoints.
+
 `cte`: cross track error.
+
 `epsi`: orientation error.
-`psides`: road curvature angle that the car must turns for..
+
+`psides`: road curvature angle that the car must turns for.
+
 `Lf`: the distance between the front of the vehicle and its center of gravity.
 
 The model is fed as constraints into the `ipopt` optimization library.
