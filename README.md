@@ -5,7 +5,7 @@ Self-Driving Car Engineer Nanodegree Program
 
 ## Overview
 
-This project implements a Model Predictive Controller to drive a simulated vehicle along the track. The controller receives the waypoints the lane cencter line and sends the driving command of steering angle and acceleration to the simulator. The below video shows the result of the car driven in the lane. The yellow line visualizes the sensor feedback on the lane and the green line is the controller forecast of driving trajectory.
+This project implements a Model Predictive Controller to drive a simulated vehicle along the track. The controller receives the waypoints of the lane center line and sends the driving commands of steering angle and acceleration to the simulator. The below video shows the result of the car driven in the lane. The yellow line visualizes the sensor feedback on the lane and the green line is the controller forecast of driving trajectory.
 
 ![project_preview](https://github.com/qqquan/t2p5_mpc/raw/master/mpc_simulation.gif)
 
@@ -28,8 +28,8 @@ A Bicycle model is used with an assupmtion of zero yaw rate, which means that th
 `y`: vehicle state of y-axis position in meters
 `v`: vehicle state of speed in meter/second
 `psi`: vehicle state of orientation in radians
-`delta`: acturation command of steering angle in radians
-`a`: acturation command of acceleration in m^2/s
+`delta`: actuation command of steering angle in radians
+`a`: actuation command of acceleration in m^2/s
 `f()`: polyfit based on the lane waypoints
 `cte`: cross track error
 `epsi`: orientation error
@@ -38,25 +38,26 @@ A Bicycle model is used with an assupmtion of zero yaw rate, which means that th
 
 The model is fed as constraints into the `ipopt` optimization library.
 
-### Timestep Length and Elapsed Duration (N & dt)
+### Hyper-parameters (N, dt, weights)
 
-After manually tuning the hyperparameters, the timestep length N of 25 and the elapsed duration of 0.02 is chosen for a reference speed of 50 m/s. 
+After manually tuning the hyper-parameters, the timestep length N of 25 and the elapsed duration of 0.02 is chosen for a reference speed of 50 m/s. 
 
 This means the total MPC prediction time is 25*0.02=0.5 seconds. 
 
 The prediction time needs to be longer than the actuation interval. Too long a prediction time, the MPC is easily affected by the higher order term of the polyfit lane and the resulted trajectory is not smooth. Too short a prediction time, the MPC would not prepare for a incoming curve.
 
+Additionally, an extra weight of 500 is added to penalize the steering change rate. This avoids sudden steering change and results in a smoother lane-following performance. 
 
 ### Polynomial Fitting and MPC Preprocessing
 
-The simulator feedbacks the lane centerline waypoints. The waypoints are in the global map coordinate. MPC preprocess the data by transforming them to a local reference frame, where the car orientation is the x-axis and the perpendicular line to x-axis is the y-axis.
+The simulator feedbacks the lane centerline waypoints. The waypoints are in the global map coordinate. MPC preprocesses the data by transforming them to a local reference frame, where the car orientation is the x-axis and the perpendicular line to x-axis is the y-axis.
 
 
-This preprocessed data is further fited as a 3rd degree polhynomial to model the lane.
+This preprocessed data is further fitted as a 3rd degree polynomial to model the lane.
 
 ### Model Predictive Control with Latency
 
-The simulation has a 100ms latency before actuation. MPC controller accomendates the issue by incorperating the letancy into prediction. In other words, MPC controller returns an acuation prediction at the time of the timestep dt plus lantency after the current timestep.
+The simulation has a 100ms latency before actuation. MPC controller accommodates the issue by incorporating the latency into prediction. In other words, MPC controller returns an actuation prediction at the time of the timestep dt plus latency after the current timestep.
 
 
 ## Installation

@@ -148,24 +148,34 @@ int main() {
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
-          vector<double> mpc_x_vals = mpc_solution.predicted_x;
-          vector<double> mpc_y_vals = mpc_solution.predicted_y;
+          vector<double> mpc_x_vals;
+          vector<double> mpc_y_vals;
 
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
+          vector<double> mpc_predicted_x = mpc_solution.predicted_x;
+          vector<double> mpc_predicted_y = mpc_solution.predicted_y;
+          Eigen::Map<Eigen::VectorXd> mpc_x_EVec(mpc_predicted_x.data(), mpc_predicted_x.size());
+          Eigen::Map<Eigen::VectorXd> mpc_y_EVec(mpc_predicted_y.data(), mpc_predicted_y.size());
+          auto mpc_trajectory_coeffs = polyfit(mpc_x_EVec, mpc_y_EVec, 3);
           //project 10 points along the detected waypoints
-          const int trajectory_n = 30; //mpc_solution.predicted_x.size()>10? 10:mpc_solution.predicted_x.size();// maximumly 10 steps for line projection
+          const int trajectory_dot_num = 10; //mpc_solution.predicted_x.size()>10? 10:mpc_solution.predicted_x.size();// maximumly 10 steps for line projection
 
-          for (int x = 1; x < trajectory_n+1; ++x)
+          for (int i = 0; i < trajectory_dot_num; ++i)
           {
-
+            const double x = i*3+3;
             next_x_vals.push_back(x);
-
             next_y_vals.push_back(polyeval(waypoint_coeffs, x));
           }
 
+          for (int i = 0; i < trajectory_dot_num/2; ++i)
+          {
+            const double x = i*3+3;
+            mpc_x_vals.push_back(x);
+            mpc_y_vals.push_back(polyeval(mpc_trajectory_coeffs, x));
+          }
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
